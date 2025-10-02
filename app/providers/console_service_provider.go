@@ -17,5 +17,4 @@ func (receiver *ConsoleServiceProvider) Register(app foundation.Application) {
 }
 
 func (receiver *ConsoleServiceProvider) Boot(app foundation.Application) {
-
 }

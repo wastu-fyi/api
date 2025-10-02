@@ -1,5 +1,4 @@
 package routes
 
 func Grpc() {
-
 }

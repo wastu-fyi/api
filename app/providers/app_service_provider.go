@@ -8,9 +8,7 @@ type AppServiceProvider struct {
 }
 
 func (receiver *AppServiceProvider) Register(app foundation.Application) {
-
 }
 
 func (receiver *AppServiceProvider) Boot(app foundation.Application) {
-
 }

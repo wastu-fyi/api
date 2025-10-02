@@ -14,7 +14,6 @@ func (receiver *QueueServiceProvider) Register(app foundation.Application) {
 }
 
 func (receiver *QueueServiceProvider) Boot(app foundation.Application) {
-
 }
 
 func (receiver *QueueServiceProvider) Jobs() []queue.Job {

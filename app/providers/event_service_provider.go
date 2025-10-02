@@ -14,7 +14,6 @@ func (receiver *EventServiceProvider) Register(app foundation.Application) {
 }
 
 func (receiver *EventServiceProvider) Boot(app foundation.Application) {
-
 }
 
 func (receiver *EventServiceProvider) listen() map[event.Event][]event.Listener {

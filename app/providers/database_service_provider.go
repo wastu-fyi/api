@@ -11,7 +11,6 @@ type DatabaseServiceProvider struct {
 }
 
 func (receiver *DatabaseServiceProvider) Register(app foundation.Application) {
-
 }
 
 func (receiver *DatabaseServiceProvider) Boot(app foundation.Application) {

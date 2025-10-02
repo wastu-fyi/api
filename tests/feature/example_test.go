@@ -17,11 +17,9 @@ func TestExampleTestSuite(t *testing.T) {
 	suite.Run(t, new(ExampleTestSuite))
 }
 
-// SetupTest will run before each test in the suite.
 func (s *ExampleTestSuite) SetupTest() {
 }
 
-// TearDownTest will run after each test in the suite.
 func (s *ExampleTestSuite) TearDownTest() {
 }
 
