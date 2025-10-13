@@ -24,16 +24,16 @@ func init() {
 				},
 			},
 		},
-		"url": config.Env("APP_URL", "http://localhost"),
-		"host": config.Env("APP_HOST", "127.0.0.1"),
-		"port": config.Env("APP_PORT", "3000"),
+		"url":             config.Env("APP_URL", "http://localhost"),
+		"host":            config.Env("APP_HOST", "127.0.0.1"),
+		"port":            config.Env("APP_PORT", "3000"),
 		"request_timeout": 3,
 		"tls": map[string]any{
 			"host": config.Env("APP_HOST", "127.0.0.1"),
 			"port": config.Env("APP_PORT", "3000"),
 			"ssl": map[string]any{
 				"cert": "",
-				"key": "",
+				"key":  "",
 			},
 		},
 		"client": map[string]any{

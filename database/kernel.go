@@ -11,8 +11,7 @@ type Kernel struct {
 }
 
 func (kernel Kernel) Migrations() []schema.Migration {
-	return []schema.Migration{
-	}
+	return []schema.Migration{}
 }
 
 func (kernel Kernel) Seeders() []seeder.Seeder {

@@ -12,6 +12,7 @@ type Body struct {
 	Code       string      `json:"code"`
 	Message    string      `json:"message"`
 	Data       interface{} `json:"data,omitempty"`
+	Meta       interface{} `json:"meta,omitempty"`
 }
 
 var defaultCodes = map[int]string{
@@ -51,6 +52,14 @@ func WithMessage(msg string) Option {
 func WithStatus(status int) Option {
 	return func(_ *Body, s *int) {
 		*s = status
+	}
+}
+
+func WithMeta(meta interface{}) Option {
+	return func(b *Body, _ *int) {
+		if meta != nil {
+			b.Meta = meta
+		}
 	}
 }
 
@@ -126,4 +135,49 @@ func NotImplemented(ctx gh.Context, msg string, opts ...Option) gh.Response {
 
 func ServiceUnavailable(ctx gh.Context, msg string, opts ...Option) gh.Response {
 	return Write(ctx, http.StatusServiceUnavailable, msg, nil, opts...)
+}
+
+type PaginationMeta struct {
+	Total        int64 `json:"total"`
+	PerPage      int   `json:"per_page"`
+	CurrentPage  int   `json:"current_page"`
+	FirstPage    int   `json:"first_page"`
+	PreviousPage *int  `json:"previous_page"`
+	NextPage     *int  `json:"next_page"`
+	LastPage     int   `json:"last_page"`
+}
+
+func BuildPaginationMeta(total int64, perPage, page int) PaginationMeta {
+	if perPage <= 0 {
+		perPage = 10
+	}
+
+	if page <= 0 {
+		page = 1
+	}
+
+	lastPage := int((total + int64(perPage) - 1) / int64(perPage))
+
+	var prevPage *int
+	var nextPage *int
+
+	if page > 1 {
+		p := page - 1
+		prevPage = &p
+	}
+
+	if page < lastPage {
+		n := page + 1
+		nextPage = &n
+	}
+
+	return PaginationMeta{
+		Total:        total,
+		PerPage:      perPage,
+		CurrentPage:  page,
+		FirstPage:    1,
+		PreviousPage: prevPage,
+		NextPage:     nextPage,
+		LastPage:     lastPage,
+	}
 }

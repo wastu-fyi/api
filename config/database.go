@@ -26,8 +26,8 @@ func init() {
 			},
 		},
 		"pool": map[string]any{
-			"max_idle_conns": 10,
-			"max_open_conns": 100,
+			"max_idle_conns":    10,
+			"max_open_conns":    100,
 			"conn_max_idletime": 3600,
 			"conn_max_lifetime": 3600,
 		},

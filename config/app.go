@@ -35,14 +35,14 @@ func Boot() {}
 func init() {
 	config := facades.Config()
 	config.Add("app", map[string]any{
-		"name": config.Env("APP_NAME", "Wastu.FYI"),
-		"env": config.Env("APP_ENV", "production"),
-		"debug": config.Env("APP_DEBUG", false),
-		"timezone": carbon.Singapore,
-		"locale": "id",
+		"name":            config.Env("APP_NAME", "Wastu.FYI"),
+		"env":             config.Env("APP_ENV", "production"),
+		"debug":           config.Env("APP_DEBUG", false),
+		"timezone":        carbon.Singapore,
+		"locale":          "id",
 		"fallback_locale": "en",
-		"lang_path": "lang",
-		"key": config.Env("APP_KEY", ""),
+		"lang_path":       "lang",
+		"key":             config.Env("APP_KEY", ""),
 		"providers": []foundation.ServiceProvider{
 			&log.ServiceProvider{},
 			&console.ServiceProvider{},
