@@ -1,0 +1,121 @@
+name: Continuous Deployment
+
+on:
+  workflow_dispatch:
+  push:
+    branches: ["main"]
+    paths-ignore:
+      - ".github/**"
+
+jobs:
+  build-and-release:
+    name: Build & Publish Release
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    env:
+      APP_NAME: api-wastu-fyi
+      BIN_NAME: wastu
+      GOOS: linux
+      GOARCH: amd64
+    outputs:
+      TAG: ${{ steps.vars.outputs.TAG }}
+      ASSET: ${{ steps.vars.outputs.ASSET }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version-file: go.mod
+
+      - name: Resolve and cache deps
+        run: |
+          go env
+          go mod download
+
+      - name: Set dynamic variables
+        id: vars
+        run: |
+          PKG_VER=$(date +'%Y.%m.%d')
+          echo "PKG_VER=$PKG_VER" >> $GITHUB_ENV
+          echo "TAG=go-$PKG_VER" >> $GITHUB_OUTPUT
+          echo "ASSET=${BIN_NAME}_${GOOS}_${GOARCH}_${PKG_VER}.tar.gz" >> $GITHUB_OUTPUT
+
+      - name: Build (linux/amd64)
+        run: |
+          mkdir -p build
+          CGO_ENABLED=0 GOOS=${GOOS} GOARCH=${GOARCH} \
+            go build -ldflags="-s -w" -o build/${BIN_NAME} .
+
+      - name: Package artifact (tar.gz)
+        run: |
+          cd build
+          tar -czf "${BIN_NAME}_${GOOS}_${GOARCH}_${{ env.PKG_VER }}.tar.gz" "${BIN_NAME}"
+
+      - name: Publish GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ steps.vars.outputs.TAG }}
+          name: ${{ steps.vars.outputs.TAG }}
+          files: |
+            build/${{ steps.vars.outputs.ASSET }}
+          draft: false
+          prerelease: false
+
+  deploy:
+    name: Deploy to Server
+    needs: build-and-release
+    runs-on: ubuntu-latest
+    steps:
+      - name: Deploy
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.SSH_HOST }}
+          username: ${{ secrets.SSH_USER }}
+          password: ${{ secrets.SSH_PASS }}
+          port: 22
+          script_stop: true
+          script: |
+            set +o history # disable history
+
+            REPO="${{ github.repository }}"
+            TAG="${{ needs.build-and-release.outputs.TAG }}"
+            ASSET="${{ needs.build-and-release.outputs.ASSET }}"
+            BIN_NAME="wastu"
+            APP_DIR="~/htdocs/api.wastu.fyi"
+            LOG_FILE="storage/logs/server.log"
+
+            source ~/.bashrc
+            source ~/.nvm/nvm.sh
+            nvm install v22.18.0
+            nvm use v22.18.0
+            node -v
+
+            APP_DIR="${APP_DIR:-$HOME/htdocs/api.wastu.fyi}"
+            APP_DIR="${APP_DIR/#~/$HOME}"
+            mkdir -p "$APP_DIR/storage/logs"
+            cd "$APP_DIR"
+
+            TMP_FILE="/tmp/${ASSET}"
+            DOWNLOAD_URL="https://github.com/${REPO}/releases/download/${TAG}/${ASSET}"
+            sleep 10
+            for i in $(seq 1 15); do
+              curl -fsSL --retry 3 -H "Accept: application/octet-stream" -L "$DOWNLOAD_URL" -o "$TMP_FILE" && break
+              sleep 4
+            done
+            [ -s "$TMP_FILE" ] || { echo "download failed" >&2; exit 1; }
+
+            tar -xzf "$TMP_FILE" -C .
+            chmod +x "./${BIN_NAME}"
+
+            pm2 stop api-wastu || true
+            pm2 delete api-wastu || true
+            pm2 flush
+            pm2 start "./${BIN_NAME}" --name api-wastu --output "$LOG_FILE" --error "$LOG_FILE"
+            pm2 save
+            pm2 status api-wastu | grep -q online || { echo "pm2 not online" >&2; exit 1; }
+
+            set -o history # re-enable history
