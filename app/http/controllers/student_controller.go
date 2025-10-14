@@ -145,15 +145,28 @@ func (c *StudentController) Years(ctx http.Context) http.Response {
 }
 
 func (c *StudentController) Show(ctx http.Context) http.Response {
-	studentID := strings.TrimSpace(ctx.Request().Route("student_id"))
-	if studentID == "" {
-		return resp.BadRequest(ctx, "student_id is required", map[string]any{"field": "student_id"})
+	idParam := strings.TrimSpace(ctx.Request().Query("id", ""))
+	nimParam := strings.TrimSpace(ctx.Request().Query("student_id", ""))
+	if idParam != "" && nimParam != "" {
+		return resp.BadRequest(ctx, "provide either id or student_id, not both", nil)
+	}
+	if idParam == "" && nimParam == "" {
+		return resp.BadRequest(ctx, "id or student_id is required", nil)
 	}
 
 	db := facades.Orm().Query()
 	var s models.Student
-	if err := db.Model(&models.Student{}).Where("nim = ?", studentID).First(&s); err != nil {
-		return resp.NotFound(ctx, "Student not found")
+	if idParam != "" {
+		if _, err := strconv.ParseUint(idParam, 10, 64); err != nil {
+			return resp.BadRequest(ctx, "invalid id", nil)
+		}
+		if err := db.Model(&models.Student{}).Where("id = ?", idParam).First(&s); err != nil {
+			return resp.NotFound(ctx, "Student not found")
+		}
+	} else {
+		if err := db.Model(&models.Student{}).Where("nim = ?", nimParam).First(&s); err != nil {
+			return resp.NotFound(ctx, "Student not found")
+		}
 	}
 
 	gender := ""
@@ -169,15 +182,28 @@ func (c *StudentController) Show(ctx http.Context) http.Response {
 		studentIDNum = n
 	}
 
-	data := map[string]any{
-		"student_id":      studentIDNum,
-		"name":            s.Name,
-		"gender":          gender,
-		"admission_year":  s.AdmissionYear,
-		"education_level": enums.StudyLevel(s.Study),
-		"study_code":      s.Study,
-		"study_name":      enums.StudyName(s.Study),
-		"status":          s.Status,
+	type studentDetail struct {
+		ID             uint    `json:"id"`
+		StudentID      uint64  `json:"student_id"`
+		Name           string  `json:"name"`
+		Gender         string  `json:"gender"`
+		AdmissionYear  int     `json:"admission_year"`
+		EducationLevel string  `json:"education_level"`
+		StudyCode      int     `json:"study_code"`
+		StudyName      string  `json:"study_name"`
+		Status         *string `json:"status"`
 	}
-	return resp.OK(ctx, data, "Student fetched")
+
+	detail := studentDetail{
+		ID:             s.ID,
+		StudentID:      studentIDNum,
+		Name:           s.Name,
+		Gender:         gender,
+		AdmissionYear:  s.AdmissionYear,
+		EducationLevel: enums.StudyLevel(s.Study),
+		StudyCode:      s.Study,
+		StudyName:      enums.StudyName(s.Study),
+		Status:         s.Status,
+	}
+	return resp.OK(ctx, detail, "Student fetched")
 }

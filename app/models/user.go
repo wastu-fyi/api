@@ -36,7 +36,7 @@ type User struct {
 	StudentID                      *uint           `gorm:"column:student_id" json:"student_id,omitempty"`
 	Username                       *string         `gorm:"column:username" json:"username,omitempty"`
 	Email                          string          `gorm:"column:email" json:"email"`
-	Password                       *string         `gorm:"column:password" json:"-"` // hidden
+	Password                       *string         `gorm:"column:password" json:"-"`
 	Name                           string          `gorm:"column:name" json:"name"`
 	Avatar                         *string         `gorm:"column:avatar" json:"avatar,omitempty"`
 	Role                           UserRole        `gorm:"column:role" json:"role"`
