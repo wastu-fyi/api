@@ -41,7 +41,7 @@ jobs:
         run: |
           PKG_VER=$(date +'%Y.%m.%d')
           echo "PKG_VER=$PKG_VER" >> $GITHUB_ENV
-          echo "TAG=go-$PKG_VER" >> $GITHUB_OUTPUT
+          echo "TAG=$PKG_VER" >> $GITHUB_OUTPUT
           echo "ASSET=${BIN_NAME}_${GOOS}_${GOARCH}_${PKG_VER}.tar.gz" >> $GITHUB_OUTPUT
 
       - name: Build (linux/amd64)
