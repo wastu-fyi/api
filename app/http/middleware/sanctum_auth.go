@@ -30,7 +30,7 @@ func SanctumAuth() http.Middleware {
 		partsAuth := strings.Fields(authz)
 		if len(partsAuth) != 2 || !strings.EqualFold(partsAuth[0], "Bearer") {
 			ctx.Response().Header("WWW-Authenticate", `Bearer realm="sanctum"`)
-			ctx.Response().Json(401, resp.Body{StatusCode: 401, Code: "UNAUTHORIZED", Message: "Missing bearer token"}).Abort()
+			ctx.Response().Json(401, resp.Body{StatusCode: 401, Code: "UNAUTHORIZED", Message: "Token otentikasi tidak ditemukan atau tidak menggunakan skema Bearer."}).Abort()
 			return
 		}
 
@@ -38,7 +38,7 @@ func SanctumAuth() http.Middleware {
 		parts := strings.SplitN(raw, "|", 2)
 		if len(parts) != 2 {
 			ctx.Response().Header("WWW-Authenticate", `Bearer realm="sanctum"`)
-			ctx.Response().Json(401, resp.Body{StatusCode: 401, Code: "UNAUTHORIZED", Message: "Bad token format"}).Abort()
+			ctx.Response().Json(401, resp.Body{StatusCode: 401, Code: "UNAUTHORIZED", Message: "Format token tidak valid. Gunakan format: {id}|{secret}."}).Abort()
 			return
 		}
 
@@ -48,7 +48,7 @@ func SanctumAuth() http.Middleware {
 		idNum, err := strconv.ParseUint(idPart, 10, 64)
 		if err != nil {
 			ctx.Response().Header("WWW-Authenticate", `Bearer realm="sanctum"`)
-			ctx.Response().Json(401, resp.Body{StatusCode: 401, Code: "UNAUTHORIZED", Message: "Bad token format"}).Abort()
+			ctx.Response().Json(401, resp.Body{StatusCode: 401, Code: "UNAUTHORIZED", Message: "Bagian id pada token tidak valid."}).Abort()
 			return
 		}
 
@@ -62,7 +62,7 @@ func SanctumAuth() http.Middleware {
 			Where("expires_at IS NULL OR expires_at > ?", time.Now()).
 			First(&pat); err != nil {
 			ctx.Response().Header("WWW-Authenticate", `Bearer realm="sanctum"`)
-			ctx.Response().Json(401, resp.Body{StatusCode: 401, Code: "UNAUTHORIZED", Message: "Invalid or expired token"}).Abort()
+			ctx.Response().Json(401, resp.Body{StatusCode: 401, Code: "UNAUTHORIZED", Message: "Token tidak valid atau sudah kedaluwarsa."}).Abort()
 			return
 		}
 

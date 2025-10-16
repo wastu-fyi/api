@@ -21,6 +21,6 @@ func Api() {
 	})
 
 	facades.Route().Fallback(func(ctx http.Context) http.Response {
-		return resp.NotFound(ctx, "The requested resource could not be found")
+		return resp.NotFound(ctx, "Rute atau sumber daya yang Anda minta tidak ditemukan. Periksa URL dan coba lagi.")
 	})
 }

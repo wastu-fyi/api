@@ -46,15 +46,15 @@ func (c *StudentController) Index(ctx http.Context) http.Response {
 
 	total, err := tx.Count()
 	if err != nil {
-		return resp.InternalServerError(ctx, "Failed to count students",
-			resp.WithMessage(err.Error()),
+		return resp.InternalServerError(ctx, "Gagal menghitung total data mahasiswa. Mohon coba lagi beberapa saat.",
+			resp.WithMessage("count query error: "+err.Error()),
 		)
 	}
 
 	var rows []models.Student
 	if err := tx.Limit(limit).Offset(offset).Get(&rows); err != nil {
-		return resp.InternalServerError(ctx, "Failed to fetch students",
-			resp.WithMessage(err.Error()),
+		return resp.InternalServerError(ctx, "Gagal mengambil daftar mahasiswa dari basis data.",
+			resp.WithMessage("select query error: "+err.Error()),
 		)
 	}
 
@@ -82,7 +82,7 @@ func (c *StudentController) Index(ctx http.Context) http.Response {
 	}
 
 	meta := resp.BuildPaginationMeta(total, limit, page)
-	return resp.OK(ctx, items, "Students fetched", resp.WithMeta(meta))
+	return resp.OK(ctx, items, "Daftar mahasiswa berhasil dimuat.", resp.WithMeta(meta))
 }
 
 func (c *StudentController) Studies(ctx http.Context) http.Response {
@@ -97,7 +97,7 @@ func (c *StudentController) Studies(ctx http.Context) http.Response {
 		Group("study").
 		Order("study ASC").
 		Get(&rows); err != nil {
-		return resp.InternalServerError(ctx, "Failed to fetch studies", resp.WithMessage(err.Error()))
+		return resp.InternalServerError(ctx, "Gagal mengambil rekap program studi.", resp.WithMessage("aggregate query error: "+err.Error()))
 	}
 
 	type item struct {
@@ -115,7 +115,7 @@ func (c *StudentController) Studies(ctx http.Context) http.Response {
 			Students:       r.Total,
 		})
 	}
-	return resp.OK(ctx, items, "Studies fetched")
+	return resp.OK(ctx, items, "Data program studi berhasil dimuat.")
 }
 
 func (c *StudentController) Years(ctx http.Context) http.Response {
@@ -130,7 +130,7 @@ func (c *StudentController) Years(ctx http.Context) http.Response {
 		Group("admission_year").
 		Order("admission_year DESC").
 		Get(&rows); err != nil {
-		return resp.InternalServerError(ctx, "Failed to fetch years", resp.WithMessage(err.Error()))
+		return resp.InternalServerError(ctx, "Gagal mengambil rekap tahun masuk mahasiswa.", resp.WithMessage("aggregate query error: "+err.Error()))
 	}
 
 	type item struct {
@@ -141,31 +141,31 @@ func (c *StudentController) Years(ctx http.Context) http.Response {
 	for _, r := range rows {
 		items = append(items, item{Year: r.AdmissionYear, Students: r.Total})
 	}
-	return resp.OK(ctx, items, "Years fetched")
+	return resp.OK(ctx, items, "Data tahun masuk berhasil dimuat.")
 }
 
 func (c *StudentController) Show(ctx http.Context) http.Response {
 	idParam := strings.TrimSpace(ctx.Request().Query("id", ""))
 	nimParam := strings.TrimSpace(ctx.Request().Query("student_id", ""))
 	if idParam != "" && nimParam != "" {
-		return resp.BadRequest(ctx, "provide either id or student_id, not both", nil)
+		return resp.BadRequest(ctx, "Harap pilih salah satu parameter: id atau student_id, tidak keduanya.", nil)
 	}
 	if idParam == "" && nimParam == "" {
-		return resp.BadRequest(ctx, "id or student_id is required", nil)
+		return resp.BadRequest(ctx, "Parameter id atau student_id wajib diisi.", nil)
 	}
 
 	db := facades.Orm().Query()
 	var s models.Student
 	if idParam != "" {
 		if _, err := strconv.ParseUint(idParam, 10, 64); err != nil {
-			return resp.BadRequest(ctx, "invalid id", nil)
+			return resp.BadRequest(ctx, "Format id tidak valid. Gunakan angka positif.", nil)
 		}
 		if err := db.Model(&models.Student{}).Where("id = ?", idParam).First(&s); err != nil {
-			return resp.NotFound(ctx, "Student not found")
+			return resp.NotFound(ctx, "Data mahasiswa dengan id tersebut tidak ditemukan.")
 		}
 	} else {
 		if err := db.Model(&models.Student{}).Where("nim = ?", nimParam).First(&s); err != nil {
-			return resp.NotFound(ctx, "Student not found")
+			return resp.NotFound(ctx, "Data mahasiswa dengan student_id tersebut tidak ditemukan.")
 		}
 	}
 
@@ -205,5 +205,5 @@ func (c *StudentController) Show(ctx http.Context) http.Response {
 		StudyName:      enums.StudyName(s.Study),
 		Status:         s.Status,
 	}
-	return resp.OK(ctx, detail, "Student fetched")
+	return resp.OK(ctx, detail, "Detail mahasiswa berhasil dimuat.")
 }
