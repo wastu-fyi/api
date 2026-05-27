@@ -2,8 +2,9 @@ package http
 
 import (
 	"github.com/goravel/framework/contracts/http"
+	"github.com/goravel/gin"
 
-	"wastu/app/http/middleware"
+	localmiddleware "wastu/app/http/middleware"
 )
 
 type Kernel struct {
@@ -11,6 +12,7 @@ type Kernel struct {
 
 func (kernel Kernel) Middleware() []http.Middleware {
 	return []http.Middleware{
-		middleware.RecoverJSON(),
+		localmiddleware.RecoverJSON(),
+		gin.Cors(),
 	}
 }

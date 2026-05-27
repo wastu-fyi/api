@@ -12,6 +12,11 @@ import (
 
 func Api() {
 	studentController := controllers.NewStudentController()
+	settingController := controllers.NewSettingController()
+	uptimeController := controllers.NewUptimeController()
+
+	facades.Route().Get("/settings", settingController.Index)
+	facades.Route().Get("/uptime", uptimeController.Index)
 
 	facades.Route().Middleware(middleware.SanctumAuth()).Group(func(router route.Router) {
 		router.Get("/students", studentController.Index)

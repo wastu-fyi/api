@@ -52,6 +52,26 @@ type User struct {
 	Student *Student `gorm:"foreignKey:StudentID;references:ID;constraint:OnUpdate:CASCADE,OnDelete:SET NULL" json:"student,omitempty"`
 }
 
+func (u *User) IsVerified() bool {
+	return u.EmailVerifiedAt != nil
+}
+
+func (u *User) IsDeveloper() bool {
+	return u.Role == UserRoleDeveloper
+}
+
+func (u *User) IsSuper() bool {
+	return u.Role == UserRoleSuper
+}
+
+func (u *User) IsMember() bool {
+	return u.Role == UserRoleMember
+}
+
+func (u *User) IsCommunity() bool {
+	return u.Role == UserRoleCommunity
+}
+
 func (User) TableName() string {
 	return "users"
 }
