@@ -79,24 +79,16 @@ jobs:
           port: 22
           script_stop: true
           script: |
-            set +o history # disable history
+            set +o history
 
             REPO="${{ github.repository }}"
             TAG="${{ needs.build-and-release.outputs.TAG }}"
             ASSET="${{ needs.build-and-release.outputs.ASSET }}"
             BIN_NAME="wastu"
             APP_DIR="~/htdocs/api.wastu.fyi"
-            LOG_FILE="storage/logs/server.log"
-
-            source ~/.bashrc
-            source ~/.nvm/nvm.sh
-            nvm install v22.18.0
-            nvm use v22.18.0
-            node -v
 
             APP_DIR="${APP_DIR:-$HOME/htdocs/api.wastu.fyi}"
             APP_DIR="${APP_DIR/#~/$HOME}"
-            mkdir -p "$APP_DIR/storage/logs"
             cd "$APP_DIR"
 
             TMP_FILE="/tmp/${ASSET}"
@@ -111,11 +103,7 @@ jobs:
             tar -xzf "$TMP_FILE" -C .
             chmod +x "./${BIN_NAME}"
 
-            pm2 stop api-wastu || true
-            pm2 delete api-wastu || true
-            pm2 flush
-            pm2 start "./${BIN_NAME}" --name api-wastu --output "$LOG_FILE" --error "$LOG_FILE"
-            pm2 save
-            pm2 status api-wastu | grep -q online || { echo "pm2 not online" >&2; exit 1; }
+            sudo systemctl restart wastu-fyi-api.service
+            sudo systemctl is-active wastu-fyi-api.service >/dev/null 2>&1 || { echo "systemd service wastu-fyi-api not active" >&2; exit 1; }
 
-            set -o history # re-enable history
+            set -o history
