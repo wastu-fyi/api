@@ -17,6 +17,7 @@ func Api() {
 
 	facades.Route().Get("/settings", settingController.Index)
 	facades.Route().Get("/uptime", uptimeController.Index)
+	facades.Route().Get("/ping", uptimeController.Ping)
 
 	facades.Route().Middleware(middleware.SanctumAuth()).Group(func(router route.Router) {
 		router.Get("/students", studentController.Index)

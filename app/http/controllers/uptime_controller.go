@@ -65,3 +65,7 @@ func (c *UptimeController) Index(ctx http.Context) http.Response {
 
 	return resp.OK(ctx, data, "Status uptime berhasil dimuat.")
 }
+
+func (c *UptimeController) Ping(ctx http.Context) http.Response {
+	return resp.OK(ctx, "PONG", "PONG")
+}
